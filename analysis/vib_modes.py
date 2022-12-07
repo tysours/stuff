@@ -70,7 +70,28 @@ class VibModes:
 def _str_to_float(line):
     return list(map(float, line.split()[-3:]))
 
-if __name__ == "__main__":
-    modes = VibModes("OUTCAR")
+
+# CLI stuff
+def parse():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("OUTCAR", type=str,
+            help="Path to OUTCAR file from VASP vibrational calculation")
+    parser.add_argument("-r", "--range", type=list[float], nargs=2,
+            metavar=("MIN_FREQ", "MAX_FREQ"),
+            help="Range of frequency values of modes to write, fmin fmax")
+    parser.add_argument("-m", "--mult", type=float, default=1.0,
+            help="Multiplier value to adjust intensity of atomic motions"\
+            "(i.e., lower value --> atoms move less in .traj")
+    return parser.parse_args()
+
+
+def main():
+    args = parse()
+    modes = VibModes(args.outcar, args.range)
     modes.read()
-    modes.write()
+    modes.write(mult=args.mult)
+
+
+if __name__ == "__main__":
+    main()
