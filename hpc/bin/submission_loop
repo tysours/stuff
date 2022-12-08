@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+"""
+import os
+import argparse
+
+def parse():
+    desc = "Submits slurm job script(s)"\
+        "into specified directories. i.e., cd --> cp script . --> sbatch script"
+    parser = argparse.ArgumentParser(description=desc)
+
+    parser.add_argument("-a", "--args", nargs="+",
+        help="Any additional desired sbatch arguments that are"\
+                "not present in script #SBATCH comment, e.g. -A account")
+
+    parser.add_argument("-s", "--scripts", metavar="script", nargs="*",
+            help="Path to script(s) to submit in each dir. If multiple specified,"\
+            "submitted as 'sbatch script1 script2 ...'")
+
+    parser.add_argument("-d", "--dirs", nargs="*",
+        help="Directories to submit scripts in. Use of glob patterns recommended!")
+
+    return parser.parse_args()
+
+
+def make_and_warn(not_a_dir):
+    if os.path.isfile(not_a_dir):
+        print(f"WARNING: {not_a_dir} is not a directory, skipping")
+        return False
+    elif not os.path.exists(not_a_dir):
+        print(f"WARNING: {not_a_dir} does not exist,"\
+               " creating directory and submitting...")
+        os.mkdir(not_a_dir)
+        return True
+
+
+def submit(scripts, dirs, args):
+    print(f"SUBMITTING {scripts} in:\n{dirs}")
+    work_dir = os.getcwd()
+    for _dir in dirs:
+        os.chdir(_dir)
+        os.system(f"cp {scripts} .") # non-pythonic but convenient if multi scripts
+        os.system(f"sbatch {args} {scripts}")
+        os.chdir(work_dir)
+
+def main():
+    args = parse()
+    sbatch_args = "" if not args.args else " ".join(args.args)
+    scripts = []
+    for script in args.scripts:
+        if not os.path.isfile(script):
+            raise FileNotFoundError(f"Unable to locate script: {script}")
+        scripts.append(os.path.abspath(script))
+
+    for i, _dir in enumerate(args.dirs):
+        if not os.path.isdir(_dir):
+            if not make_and_warn(_dir):
+                args.dirs.pop(i)
+
+    scripts = " ".join(scripts)
+    submit(scripts, args.dirs, sbatch_args)
+
+if __name__ == "__main__":
+    main()
