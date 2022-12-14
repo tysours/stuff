@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-# change --comment to match walltime (unless you want script to run for more than allowed max walltime - 48 hrs)
-#SBATCH -t 0:30 --comment=24:00:00
-#SBATCH -q debug -N 1 -C knl --ntasks-per-node=64 
-#SBATCH --output=job.out --error=job.err 
+#SBATCH -t 20:00:00 --time-min=2:00:00
+#SBATCH -q overrun -N 1 -C knl --ntasks-per-node=64
+#SBATCH --output=job.out --error=job.err
 
-# resubmission stuff
-#SBATCH --signal=B:USR1@10 --requeue --open-mode=append
+# resubmission stuff, don't touch unless you know what you're doing
+#SBATCH --signal=B:USR1@60 --requeue --open-mode=append
 
 import os
 import re
@@ -22,7 +21,7 @@ def resub(func, checkpoint=None, ckpt_kwargs={}, sleep_time=30):
     """
     Decorator for running variable time jobs on flex / overrun queues.
     Catches USR1 signal, calls optional checkpointing function, then resubmits
-    job to queue and logs stuff. 
+    job to queue and logs stuff.
 
     Include something similar to the following in your script's #SBATCH comment,
     #SBATCH --time-min=2:00:00 --signal=B:USR1@60 --requeue --open-mode=append
@@ -60,7 +59,7 @@ class ResubHandler:
         os.system(f"scontrol requeue {job_id}")
         logging.info("JOB RESUBMITTED")
         self.stop = True
-        
+
     def poke(self):
         if not self.thread.is_alive():
             logging.info("TASK COMPLETED, NO RESUBMISSION NECESSARY")
@@ -71,4 +70,3 @@ class ResubHandler:
         while not self.stop:
             self.poke()
             time.sleep(sleep_time)
-
