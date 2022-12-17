@@ -122,8 +122,8 @@ run exist, and if so, start from those results. Again, this is needed because ea
 script is resubmitted, the ENTIRE script is reran. Depending on what you're doing, this
 may or may not be trivial to implement. Single calculations like above are simple,
 but sequential calculations that proceed from the results of the previous
-are a bit obnoxious to implement, but I'll let you figure that out ;)
-- hint: use glob.glob and write your calc dirs in a sortable way.
+are a bit obnoxious to implement, but I'll let you figure that out ;) - hint:
+use glob.glob and write your calc dirs in a sortable way.
 
 Also **NOTE that certain calculations (like vibrational calcs w/ IBRION=5) need to be ran in their
 entirety in a single submission. These are not possible for variable time jobs!** Though
@@ -206,16 +206,16 @@ from resub import resub
 
 # use keyword args if you have any arguments!!
 def my_checkpoint(kwarg1=None, kwarg2=None):
-	do_stuff(kwarg1)
-	do_other_stuff(kwarg2)
-	return
+    do_stuff(kwarg1)
+    do_other_stuff(kwarg2)
+    return
 
 @resub(checkpoint=my_checkpoint, ckpt_kwargs=dict(kwarg1=whatever, kwarg2=whatever2))
 def main():
-	code_body_stuff()
+    code_body_stuff()
 
 if __name__ == '__main__':
-	main()
+    main()
 ```
 
 
@@ -240,8 +240,8 @@ making a note incase it's an issue someday for someone.
 ### Side rant on STOPCARs for those who know what I'm talking about
 If you're writing STOPCARs for checkpointing VASP, then STOP, because that doesn't really accomplish anything
 (I know the NERSC site uses it as an example of a VASP checkpoint script, but it seems pointless to me).
-First of all, starting from a converged ionic step only matters if you're writing WAVECARs
-- and most people aren't for the majority of calculations
+First of all, starting from a converged ionic step only matters if you're writing WAVECARs - and
+most people aren't for the majority of calculations
 because the files are massive. Plus if you are writing them, it's usually a hybrid functional that
 is too slow to justify running as a variable time job anyway. But even if you are writing WAVECARS,
 the WAVECAR is only written after each ionic step finishes. What does this mean? If you write a STOPCAR
