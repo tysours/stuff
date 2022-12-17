@@ -97,7 +97,7 @@ def main(): # put your code body here
     calc = Vasp(**params)
     atoms.calc = calc
 
-	os.makedirs(calc_dir, exist_ok=True)
+    os.makedirs(calc_dir, exist_ok=True)
     os.chdir(calc_dir)
     atoms.get_potential_energy()
     atoms.write('opt_from_vasp.traj')
