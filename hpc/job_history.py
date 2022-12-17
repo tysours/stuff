@@ -51,7 +51,7 @@ class JobHistory:
         command = f"sacct {date_args} {fmt_arg} | grep {self.user} > .jobhistory.temp"
         os.system(command)
         jobs = np.loadtxt(".jobhistory.temp", dtype=int, usecols=(2,3))
-        os.remove(".jobhistory.temp")
+        #os.remove(".jobhistory.temp")
 
         nonzero = [] # filter out cancelled jobs w/ 0 run time
         for _id, row in enumerate(jobs):
@@ -61,7 +61,10 @@ class JobHistory:
 
         n_jobs = jobs.shape[0]
         if n_jobs:
-            elapsed, cpu = np.sum(jobs, axis=0) / 3600.0
+            try:
+                elapsed, cpu = np.sum(jobs, axis=0) / 3600.0
+            except TypeError: # if only 1 job present
+                elapsed, cpu = jobs / 3600.0
         else:
             elapsed, cpu = 0.0, 0.0
         self.cache = n_jobs, elapsed, cpu
@@ -75,7 +78,6 @@ class JobHistory:
 
     def update_total(self):
         if self.cache:
-            print(self.start)
             n_jobs, elapsed, cpu = self.cache
         else:
             n_jobs, elapsed, cpu = self.get_month_of_jobs(verbose=True)
