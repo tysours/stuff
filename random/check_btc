@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+"""Ignorance is bliss, don't use this script!!! Checks current BTC price."""
+import json
+import requests
+import datetime
+
+def get_btc_info():
+    stuff = requests.get('https://www.bitstamp.net/api/ticker/')
+    btc_info = json.loads(stuff.content)
+    return btc_info
+
+def get_price():
+    btc_info = get_btc_info()
+    price, timestamp = btc_info['last'], int(btc_info['timestamp'])
+    date = datetime.datetime.fromtimestamp(timestamp)
+    return price, date
+
+def main():
+    price, date = get_price()
+    date_str = f'BTC at ${price} on {date}'
+    print(date_str)
+
+if __name__ == "__main__":
+    main()
