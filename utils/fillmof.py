@@ -2,7 +2,7 @@ import os
 import numpy as np
 from ase.build import molecule
 from ase.neighborlist import mic
-from ase.io import read
+from ase.io import read, write
 
 
 class FillMOF:
@@ -93,7 +93,6 @@ class FillMOF:
         self.cop = np.sum(ads.positions, 0) / len(ads)
 
     def translate(self, ads):
-        # random unit vectors to rotate water randomly
         ads.translate(self.position - self.cop)
         self.cop = np.sum(ads.positions, 0) / len(ads)
 
@@ -106,10 +105,42 @@ class FillMOF:
         return all_distances
 
 
+def parse():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("adsorbate", type=str,
+            help="Path to adsorbate molecule file or chemical formula to make"\
+                " with ase.build.molecule")
+    parser.add_argument("adsorbent", type=str,
+            help="Path to ASE-readable file with adsorbent structure")
+    parser.add_argument("-n", type=int, default=1,
+            help="Number of adsorbate molecules to attempt to add to adsorbent")
+    parser.add_argument("-x", type=int, default=1,
+            help="Number of new structures with adsorbent + N adsorbates to create")
+    parser.add_argument("-t", type=float, default=2.0,
+            help="Minimum distance between adsorbate and adsorbent atoms")
+    parser.add_argument("-o", "--output-file", type=str, default="new_configs.traj",
+            help="File name to write output to")
+    parser.add_argument("--maxiter", type=int, default=500,
+            help="Max number of attempts to randomly add adsorbate to adsorbent")
+    return parser.parse_args()
+
+
+def main():
+    args = parse()
+    filler = FillMOF(read(args.adsorbent), adsorbate=args.adsorbate, tol=args.t)
+    new_configs = []
+    for _ in range(args.x):
+        atoms = filler.fill(n=args.n, verbose=False)
+        new_configs.append(atoms)
+    write(args.output_file, new_configs)
+
 if __name__ == "__main__":
     # EXAMPLE
-    adsorbate = read("CO2.traj")
-    mof = read("zif8.traj")
+    #adsorbate = read("CO2.traj")
+    #mof = read("zif8.traj")
 
-    filler = FillMOF(mof, adsorbate=adsorbate, tol=2.0)
-    filler.fill(n=5) # add 5 CO2 molecules if possible with specified tol
+    #filler = FillMOF(mof, adsorbate=adsorbate, tol=2.0)
+    #atoms = filler.fill(n=5) # add 5 CO2 molecules if possible with specified tol
+
+    main()
